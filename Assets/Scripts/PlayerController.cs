@@ -23,11 +23,15 @@ public class PlayerController : MonoBehaviour
     public float maxInputSpeed = 8f;
     public float landingSoak = 1f;
     public float jumpCooldownTime = 0.1f;
+    public string states;
+    public float standHeight = 2f;
+    public float crouchHeight = 1f;
 
     // States
     public float walk = 5f;
     public float sprint = 8f;
     public float crouch = 2.5f;
+    public float slide = 5f;
 
     private bool grounded;
     public bool isGrounded
@@ -39,6 +43,8 @@ public class PlayerController : MonoBehaviour
     private bool wasSprinting;
     private bool crouching;
     private bool wasCrouching;
+    private bool sliding;
+    private bool wasSliding;
 
     // Unity Components
     private Rigidbody rigidbody;
@@ -151,6 +157,15 @@ public class PlayerController : MonoBehaviour
         // DoLook();
 
         UpdatePlayerSpeed();
+
+        if (crouching || sliding)
+        {
+            capsuleCollider.height = Mathf.Lerp(capsuleCollider.height, crouchHeight, Time.deltaTime * 15f);
+        } else
+        {
+            capsuleCollider.height = Mathf.Lerp(capsuleCollider.height, standHeight, Time.deltaTime * 25f);
+        }
+
         CheckJumpState();
         DoMovement();
     }
@@ -401,7 +416,16 @@ public class PlayerController : MonoBehaviour
 
     private void UpdatePlayerSpeed()
     {
-        if (crouching)
+        if (sliding) { 
+            //Lerp from rigid body velocity to slide speed
+            float velocity = rigidbody.velocity.magnitude;
+            curSpeed = Mathf.Lerp(velocity, 0, Time.deltaTime * 2f);
+            if (curSpeed <= slide)
+            {
+                sliding = false;
+            }
+        }
+        else if (crouching)
         {
             curSpeed = crouch;
         }
@@ -465,6 +489,7 @@ public class PlayerController : MonoBehaviour
             jumpState = 1;
         }
 
+        wasSprinting = sprinting;
         if (Input.GetButtonDown("Sprint") && !toggleSprint)
         {
             sprinting = true;
@@ -478,6 +503,7 @@ public class PlayerController : MonoBehaviour
             sprinting = !sprinting;
         }
 
+        wasCrouching = crouching;
         if (Input.GetButtonDown("Crouch") && !toggleCrouch)
         {
             crouching = true;
@@ -490,6 +516,16 @@ public class PlayerController : MonoBehaviour
         {
             crouching = !crouching;
         }
+
+        if (sprinting && crouching && !wasCrouching && !sliding) {
+            sliding = true;
+        }
+
+        if (sliding && !crouching) {
+            sliding = false;
+        }
+
+        states = $"Grounded: {grounded} Jump State: {jumpState} Sprinting: {sprinting} Crouching: {crouching} Sliding: {sliding}";
     }
 
     void DoLook()
@@ -552,5 +588,4 @@ public class PlayerController : MonoBehaviour
 
         contactPoints.Remove(collision.gameObject.GetInstanceID());
     }
-
 }
