@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 // Thanks to cranky https://forum.unity.com/members/cranky.641707/ https://forum.unity.com/threads/rigidbody-fps-controller.257353/
 
