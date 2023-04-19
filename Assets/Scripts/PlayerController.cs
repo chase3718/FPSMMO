@@ -553,42 +553,4 @@ public class PlayerController : MonoBehaviour
         contactPoints.Remove(collision.gameObject.GetInstanceID());
     }
 
-    // public void OnMove(InputAction.CallbackContext context)
-    // {
-    //     movementInput = context.ReadValue<Vector2>();
-    // }
-
-    // public void OnJump(InputAction.CallbackContext context)
-    // {
-    //     if (groundedLastFrame && jumpCooldown <= 0f)
-    //     {
-    //         jumpState = 1;
-    //     }
-    // }
-
-    // public void OnLook(InputAction.CallbackContext context)
-    // {
-    //     lookInput = context.ReadValue<Vector2>();
-    //     lookX = lookInput.x * lookSensitivity * Time.deltaTime;
-    //     lookY = lookInput.y * lookSensitivity * Time.deltaTime;
-
-    //     xRotation -= lookY;
-    //     xRotation = Mathf.Clamp(xRotation, minLookAngle, maxLookAngle);
-    //     // Rotate the camera
-    //     camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-    //     // Rotate the player
-    //     transform.Rotate(Vector3.up * lookX);
-    // }
-
-    // public void OnSprint(InputAction.CallbackContext context)
-    // {
-    //     if (toggleSprint)
-    //     {
-    //         sprinting = !sprinting;
-    //     }
-    //     else
-    //     {
-    //         sprinting = context.ReadValueAsButton();
-    //     }
-    // }
 }
