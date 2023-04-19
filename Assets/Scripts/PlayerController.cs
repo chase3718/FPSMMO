@@ -26,6 +26,7 @@ public class PlayerController : MonoBehaviour
     public string states;
     public float standHeight = 2f;
     public float crouchHeight = 1f;
+    public float terminalVelocity = 20f;
 
     // States
     public float walk = 5f;
@@ -160,14 +161,32 @@ public class PlayerController : MonoBehaviour
 
         if (crouching || sliding)
         {
-            capsuleCollider.height = Mathf.Lerp(capsuleCollider.height, crouchHeight, Time.deltaTime * 15f);
-        } else
+            capsuleCollider.height = Mathf.Lerp(
+                capsuleCollider.height,
+                crouchHeight,
+                Time.deltaTime * 15f
+            );
+        }
+        else
         {
-            capsuleCollider.height = Mathf.Lerp(capsuleCollider.height, standHeight, Time.deltaTime * 25f);
+            capsuleCollider.height = Mathf.Lerp(
+                capsuleCollider.height,
+                standHeight,
+                Time.deltaTime * 25f
+            );
         }
 
         CheckJumpState();
         DoMovement();
+        LimitSpeed();
+    }
+
+    void LimitSpeed()
+    {
+        if (rigidbody.velocity.magnitude > terminalVelocity)
+        {
+            rigidbody.velocity = rigidbody.velocity.normalized * terminalVelocity;
+        }
     }
 
     private void DoMovement()
@@ -416,10 +435,11 @@ public class PlayerController : MonoBehaviour
 
     private void UpdatePlayerSpeed()
     {
-        if (sliding) { 
+        if (sliding)
+        {
             //Lerp from rigid body velocity to slide speed
             float velocity = rigidbody.velocity.magnitude;
-            curSpeed = Mathf.Lerp(velocity, 0, Time.deltaTime * 2f);
+            curSpeed = Mathf.Lerp(velocity, 0, Time.deltaTime * 0.5f);
             if (curSpeed <= slide)
             {
                 sliding = false;
@@ -517,15 +537,18 @@ public class PlayerController : MonoBehaviour
             crouching = !crouching;
         }
 
-        if (sprinting && crouching && !wasCrouching && !sliding) {
+        if (sprinting && crouching && !wasCrouching && !sliding)
+        {
             sliding = true;
         }
 
-        if (sliding && !crouching) {
+        if (sliding && !crouching)
+        {
             sliding = false;
         }
 
-        states = $"Grounded: {grounded} Jump State: {jumpState} Sprinting: {sprinting} Crouching: {crouching} Sliding: {sliding}";
+        states =
+            $"Grounded: {grounded} Jump State: {jumpState} Sprinting: {sprinting} Crouching: {crouching} Sliding: {sliding}";
     }
 
     void DoLook()
