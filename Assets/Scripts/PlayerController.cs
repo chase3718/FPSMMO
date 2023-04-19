@@ -19,6 +19,7 @@ public class PlayerController : MonoBehaviour
     public float maxLookAngle = 85f,
         minLookAngle = -90f;
     public bool toggleSprint = false;
+    public bool toggleCrouch = false;
     public float maxInputSpeed = 8f;
     public float landingSoak = 1f;
     public float jumpCooldownTime = 0.1f;
@@ -35,6 +36,9 @@ public class PlayerController : MonoBehaviour
     }
 
     private bool sprinting;
+    private bool wasSprinting;
+    private bool crouching;
+    private bool wasCrouching;
 
     // Unity Components
     private Rigidbody rigidbody;
@@ -134,48 +138,26 @@ public class PlayerController : MonoBehaviour
         rigidbody.freezeRotation = true;
     }
 
+    void Update()
+    {
+        GetInput();
+    }
+
     void FixedUpdate()
     {
         Debug.Log(new Vector2(rigidbody.velocity.x, rigidbody.velocity.z).magnitude);
 
         CheckGrounded();
+        // DoLook();
 
+        UpdatePlayerSpeed();
+        CheckJumpState();
+        DoMovement();
+    }
+
+    private void DoMovement()
+    {
         RaycastHit hit;
-
-        if (sprinting)
-        {
-            curSpeed = sprint;
-        }
-        else
-        {
-            curSpeed = walk;
-        }
-
-        if (isGrounded)
-        {
-            if (jumpCooldown > 0f)
-            {
-                jumpCooldown -= Time.fixedDeltaTime;
-            } else {
-                jumpCooldown = 0f;
-            }
-            groundNormal.Normalize();
-
-            if (jumpState == 3)
-            {
-                jumpState = 0;
-            }
-        }
-        else if (jumpState == 2)
-        {
-            jumpState = 3;
-        }
-
-        if (!isGrounded) {
-            jumpCooldown = jumpCooldownTime;
-        }
-
-        GetInput();
 
         float length = 0f;
         bool accelerating = false;
@@ -387,6 +369,52 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void CheckJumpState()
+    {
+        if (isGrounded)
+        {
+            if (jumpCooldown > 0f)
+            {
+                jumpCooldown -= Time.fixedDeltaTime;
+            }
+            else
+            {
+                jumpCooldown = 0f;
+            }
+            groundNormal.Normalize();
+
+            if (jumpState == 3)
+            {
+                jumpState = 0;
+            }
+        }
+        else if (jumpState == 2)
+        {
+            jumpState = 3;
+        }
+
+        if (!isGrounded)
+        {
+            jumpCooldown = jumpCooldownTime;
+        }
+    }
+
+    private void UpdatePlayerSpeed()
+    {
+        if (crouching)
+        {
+            curSpeed = crouch;
+        }
+        else if (sprinting)
+        {
+            curSpeed = sprint;
+        }
+        else
+        {
+            curSpeed = walk;
+        }
+    }
+
     void CheckGrounded()
     {
         RaycastHit hit;
@@ -420,8 +448,58 @@ public class PlayerController : MonoBehaviour
 
     void GetInput()
     {
+        movementInput = new Vector2(
+            Input.GetAxis("Horizontal"),
+            Input.GetAxis("Vertical")
+        ).normalized;
         inputX = movementInput.x;
         inputY = movementInput.y;
+
+        lookInput = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+        lookX = lookInput.x * lookSensitivity * Time.deltaTime * 360f;
+        lookY = lookInput.y * lookSensitivity * Time.deltaTime * 360f;
+        DoLook();
+
+        if (Input.GetButtonDown("Jump") && groundedLastFrame && jumpCooldown <= 0f)
+        {
+            jumpState = 1;
+        }
+
+        if (Input.GetButtonDown("Sprint") && !toggleSprint)
+        {
+            sprinting = true;
+        }
+        else if (Input.GetButtonUp("Sprint") && !toggleSprint)
+        {
+            sprinting = false;
+        }
+        else if (Input.GetButtonDown("Sprint") && toggleSprint)
+        {
+            sprinting = !sprinting;
+        }
+
+        if (Input.GetButtonDown("Crouch") && !toggleCrouch)
+        {
+            crouching = true;
+        }
+        else if (Input.GetButtonUp("Crouch") && !toggleCrouch)
+        {
+            crouching = false;
+        }
+        else if (Input.GetButtonDown("Crouch") && toggleCrouch)
+        {
+            crouching = !crouching;
+        }
+    }
+
+    void DoLook()
+    {
+        xRotation -= lookY;
+        xRotation = Mathf.Clamp(xRotation, minLookAngle, maxLookAngle);
+        // Rotate the camera
+        camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        // Rotate the player
+        transform.Rotate(Vector3.up * lookX);
     }
 
     // TODO: Add fall damage
@@ -475,42 +553,42 @@ public class PlayerController : MonoBehaviour
         contactPoints.Remove(collision.gameObject.GetInstanceID());
     }
 
-    public void OnMove(InputAction.CallbackContext context)
-    {
-        movementInput = context.ReadValue<Vector2>();
-    }
+    // public void OnMove(InputAction.CallbackContext context)
+    // {
+    //     movementInput = context.ReadValue<Vector2>();
+    // }
 
-    public void OnJump(InputAction.CallbackContext context)
-    {
-        if (groundedLastFrame && jumpCooldown <= 0f)
-        {
-            jumpState = 1;
-        }
-    }
+    // public void OnJump(InputAction.CallbackContext context)
+    // {
+    //     if (groundedLastFrame && jumpCooldown <= 0f)
+    //     {
+    //         jumpState = 1;
+    //     }
+    // }
 
-    public void OnLook(InputAction.CallbackContext context)
-    {
-        lookInput = context.ReadValue<Vector2>();
-        lookX = lookInput.x * lookSensitivity * Time.deltaTime;
-        lookY = lookInput.y * lookSensitivity * Time.deltaTime;
+    // public void OnLook(InputAction.CallbackContext context)
+    // {
+    //     lookInput = context.ReadValue<Vector2>();
+    //     lookX = lookInput.x * lookSensitivity * Time.deltaTime;
+    //     lookY = lookInput.y * lookSensitivity * Time.deltaTime;
 
-        xRotation -= lookY;
-        xRotation = Mathf.Clamp(xRotation, minLookAngle, maxLookAngle);
-        // Rotate the camera
-        camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-        // Rotate the player
-        transform.Rotate(Vector3.up * lookX);
-    }
+    //     xRotation -= lookY;
+    //     xRotation = Mathf.Clamp(xRotation, minLookAngle, maxLookAngle);
+    //     // Rotate the camera
+    //     camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+    //     // Rotate the player
+    //     transform.Rotate(Vector3.up * lookX);
+    // }
 
-    public void OnSprint(InputAction.CallbackContext context)
-    {
-        if (toggleSprint)
-        {
-            sprinting = !sprinting;
-        }
-        else
-        {
-            sprinting = context.ReadValueAsButton();
-        }
-    }
+    // public void OnSprint(InputAction.CallbackContext context)
+    // {
+    //     if (toggleSprint)
+    //     {
+    //         sprinting = !sprinting;
+    //     }
+    //     else
+    //     {
+    //         sprinting = context.ReadValueAsButton();
+    //     }
+    // }
 }
