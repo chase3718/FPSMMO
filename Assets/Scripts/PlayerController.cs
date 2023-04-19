@@ -58,6 +58,8 @@ public class PlayerController : MonoBehaviour
     private float lookX;
     private float lookY;
     private float xRotation;
+    private float yRotation;
+
     private Vector2 movementInput;
     private Vector3 movementVector;
     private Vector2 lookInput;
@@ -114,7 +116,7 @@ public class PlayerController : MonoBehaviour
     {
         rigidbody = GetComponent<Rigidbody>();
         capsuleCollider = GetComponent<CapsuleCollider>();
-        camera = GetComponentInChildren<Camera>();
+        camera = Camera.main;
 
         // Set cursor to locked
         Cursor.lockState = CursorLockMode.Locked;
@@ -147,14 +149,13 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        GetInput();
     }
 
     void FixedUpdate()
     {
-        Debug.Log(new Vector2(rigidbody.velocity.x, rigidbody.velocity.z).magnitude);
-
         CheckGrounded();
+        GetInput();
+
         // DoLook();
 
         UpdatePlayerSpeed();
@@ -181,6 +182,11 @@ public class PlayerController : MonoBehaviour
         LimitSpeed();
     }
 
+    void LateUpdate() {
+        camera.transform.position = transform.position + new Vector3(0, capsuleCollider.height / 2 * 0.75f, 0);
+        DoLook();
+    }
+
     void LimitSpeed()
     {
         if (rigidbody.velocity.magnitude > terminalVelocity)
@@ -195,6 +201,9 @@ public class PlayerController : MonoBehaviour
 
         float length = 0f;
         bool accelerating = false;
+
+        // Rotate the player
+        transform.rotation = Quaternion.Euler(transform.rotation.x, yRotation, transform.rotation.z);
 
         if (isGrounded && jumpState != 3)
         {
@@ -260,21 +269,8 @@ public class PlayerController : MonoBehaviour
                 movementVector.y -= Physics.gravity.y * Time.deltaTime;
             }
 
-            if (accelerating)
-            {
-                float currentSpeed = new Vector2(
-                    rigidbody.velocity.x,
-                    rigidbody.velocity.z
-                ).magnitude;
-
-                if (currentSpeed >= maxInputSpeed)
-                {
-                    movementVector.x = 0;
-                    movementVector.z = 0;
-                }
-            }
-
-            rigidbody.AddForce(movementVector, ForceMode.VelocityChange);
+            Debug.Log($"Grounded Movement:\n{movementVector}");
+            rigidbody.AddForce(movementVector, ForceMode.Impulse);
             groundedLastFrame = true;
         }
         else
@@ -324,7 +320,7 @@ public class PlayerController : MonoBehaviour
                         )
                     )
                     {
-                        rigidbody.AddForce(hit.normal * -hit.distance, ForceMode.VelocityChange);
+                        rigidbody.AddForce(hit.normal * -hit.distance, ForceMode.Impulse);
                         return; // skip air accel because we should be grounded
                     }
                 }
@@ -392,10 +388,12 @@ public class PlayerController : MonoBehaviour
 
                 movementVector *= 0.5f;
 
+            Debug.Log($"Air Movement:\n{movementVector}");
+
                 // Add the force
                 rigidbody.AddForce(
                     new Vector3(movementVector.x, 0f, movementVector.z),
-                    ForceMode.VelocityChange
+                    ForceMode.Impulse
                 );
             }
 
@@ -499,10 +497,7 @@ public class PlayerController : MonoBehaviour
         inputX = movementInput.x;
         inputY = movementInput.y;
 
-        lookInput = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-        lookX = lookInput.x * lookSensitivity * Time.deltaTime * 360f;
-        lookY = lookInput.y * lookSensitivity * Time.deltaTime * 360f;
-        DoLook();
+        
 
         if (Input.GetButtonDown("Jump") && groundedLastFrame && jumpCooldown <= 0f)
         {
@@ -553,12 +548,15 @@ public class PlayerController : MonoBehaviour
 
     void DoLook()
     {
+        lookInput = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+        lookX = lookInput.x * lookSensitivity * Time.deltaTime * 360f;
+        lookY = lookInput.y * lookSensitivity * Time.deltaTime * 360f;
+        // DoLook();
         xRotation -= lookY;
         xRotation = Mathf.Clamp(xRotation, minLookAngle, maxLookAngle);
-        // Rotate the camera
-        camera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-        // Rotate the player
-        transform.Rotate(Vector3.up * lookX);
+        yRotation += lookX;
+
+        camera.transform.rotation = Quaternion.Euler(xRotation, yRotation, 0f);
     }
 
     // TODO: Add fall damage
