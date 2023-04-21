@@ -1,12 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 // Thanks to cranky https://forum.unity.com/members/cranky.641707/ https://forum.unity.com/threads/rigidbody-fps-controller.257353/
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(CapsuleCollider))]
-public class PlayerController : MonoBehaviour
+public class PlayerControllerOld : MonoBehaviour
 {
     public float AccelerationRate = 20f;
     public float DecelerationsRate = 20f;
@@ -147,9 +148,7 @@ public class PlayerController : MonoBehaviour
         rigidbody.freezeRotation = true;
     }
 
-    void Update()
-    {
-    }
+    void Update() { }
 
     void FixedUpdate()
     {
@@ -178,13 +177,16 @@ public class PlayerController : MonoBehaviour
         }
 
         CheckJumpState();
+        OnLook();
         DoMovement();
         LimitSpeed();
     }
 
-    void LateUpdate() {
-        camera.transform.position = transform.position + new Vector3(0, capsuleCollider.height / 2 * 0.75f, 0);
-        DoLook();
+    void LateUpdate()
+    {
+        camera.transform.position =
+            transform.position + new Vector3(0, capsuleCollider.height / 2 * 0.75f, 0);
+        // DoLook();
     }
 
     void LimitSpeed()
@@ -203,7 +205,11 @@ public class PlayerController : MonoBehaviour
         bool accelerating = false;
 
         // Rotate the player
-        transform.rotation = Quaternion.Euler(transform.rotation.x, yRotation, transform.rotation.z);
+        transform.rotation = Quaternion.Euler(
+            transform.rotation.x,
+            yRotation,
+            transform.rotation.z
+        );
 
         if (isGrounded && jumpState != 3)
         {
@@ -269,7 +275,6 @@ public class PlayerController : MonoBehaviour
                 movementVector.y -= Physics.gravity.y * Time.deltaTime;
             }
 
-            Debug.Log($"Grounded Movement:\n{movementVector}");
             rigidbody.AddForce(movementVector, ForceMode.Impulse);
             groundedLastFrame = true;
         }
@@ -388,8 +393,6 @@ public class PlayerController : MonoBehaviour
 
                 movementVector *= 0.5f;
 
-            Debug.Log($"Air Movement:\n{movementVector}");
-
                 // Add the force
                 rigidbody.AddForce(
                     new Vector3(movementVector.x, 0f, movementVector.z),
@@ -490,73 +493,60 @@ public class PlayerController : MonoBehaviour
 
     void GetInput()
     {
-        movementInput = new Vector2(
-            Input.GetAxis("Horizontal"),
-            Input.GetAxis("Vertical")
-        ).normalized;
-        inputX = movementInput.x;
-        inputY = movementInput.y;
+        // movementInput = new Vector2(
+        //     Input.GetAxis("Horizontal"),
+        //     Input.GetAxis("Vertical")
+        // ).normalized;
+        // inputX = movementInput.x;
+        // inputY = movementInput.y;
 
-        
 
-        if (Input.GetButtonDown("Jump") && groundedLastFrame && jumpCooldown <= 0f)
-        {
-            jumpState = 1;
-        }
 
-        wasSprinting = sprinting;
-        if (Input.GetButtonDown("Sprint") && !toggleSprint)
-        {
-            sprinting = true;
-        }
-        else if (Input.GetButtonUp("Sprint") && !toggleSprint)
-        {
-            sprinting = false;
-        }
-        else if (Input.GetButtonDown("Sprint") && toggleSprint)
-        {
-            sprinting = !sprinting;
-        }
+        // if (Input.GetButtonDown("Jump") && groundedLastFrame && jumpCooldown <= 0f)
+        // {
+        //     jumpState = 1;
+        // }
 
-        wasCrouching = crouching;
-        if (Input.GetButtonDown("Crouch") && !toggleCrouch)
-        {
-            crouching = true;
-        }
-        else if (Input.GetButtonUp("Crouch") && !toggleCrouch)
-        {
-            crouching = false;
-        }
-        else if (Input.GetButtonDown("Crouch") && toggleCrouch)
-        {
-            crouching = !crouching;
-        }
+        // wasSprinting = sprinting;
+        // if (Input.GetButtonDown("Sprint") && !toggleSprint)
+        // {
+        //     sprinting = true;
+        // }
+        // else if (Input.GetButtonUp("Sprint") && !toggleSprint)
+        // {
+        //     sprinting = false;
+        // }
+        // else if (Input.GetButtonDown("Sprint") && toggleSprint)
+        // {
+        //     sprinting = !sprinting;
+        // }
 
-        if (sprinting && crouching && !wasCrouching && !sliding)
-        {
-            sliding = true;
-        }
+        // wasCrouching = crouching;
+        // if (Input.GetButtonDown("Crouch") && !toggleCrouch)
+        // {
+        //     crouching = true;
+        // }
+        // else if (Input.GetButtonUp("Crouch") && !toggleCrouch)
+        // {
+        //     crouching = false;
+        // }
+        // else if (Input.GetButtonDown("Crouch") && toggleCrouch)
+        // {
+        //     crouching = !crouching;
+        // }
 
-        if (sliding && !crouching)
-        {
-            sliding = false;
-        }
+        // if (sprinting && crouching && !wasCrouching && !sliding)
+        // {
+        //     sliding = true;
+        // }
 
-        states =
-            $"Grounded: {grounded} Jump State: {jumpState} Sprinting: {sprinting} Crouching: {crouching} Sliding: {sliding}";
-    }
+        // if (sliding && !crouching)
+        // {
+        //     sliding = false;
+        // }
 
-    void DoLook()
-    {
-        lookInput = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-        lookX = lookInput.x * lookSensitivity * Time.deltaTime * 360f;
-        lookY = lookInput.y * lookSensitivity * Time.deltaTime * 360f;
-        // DoLook();
-        xRotation -= lookY;
-        xRotation = Mathf.Clamp(xRotation, minLookAngle, maxLookAngle);
-        yRotation += lookX;
-
-        camera.transform.rotation = Quaternion.Euler(xRotation, yRotation, 0f);
+        // states =
+        //     $"Grounded: {grounded} Jump State: {jumpState} Sprinting: {sprinting} Crouching: {crouching} Sliding: {sliding}";
     }
 
     // TODO: Add fall damage
@@ -608,5 +598,46 @@ public class PlayerController : MonoBehaviour
         }
 
         contactPoints.Remove(collision.gameObject.GetInstanceID());
+    }
+
+    public void OnMove(InputAction.CallbackContext context) { 
+        movementInput = context.ReadValue<Vector2>();
+        inputX = movementInput.x;
+        inputY = movementInput.y;
+
+        Debug.Log($"Move {inputX} {inputY}");
+    }
+
+    public void OnLook() {
+        lookInput = new Vector2(
+            Input.GetAxis("Mouse X"),
+            Input.GetAxis("Mouse Y")
+        );
+        lookX = lookInput.x * lookSensitivity / 100f;
+        lookY = lookInput.y * lookSensitivity / 100f;
+        
+        Debug.Log($"Look {lookX} {lookY}");
+
+        xRotation -= lookY;
+        xRotation = Mathf.Clamp(xRotation, minLookAngle, maxLookAngle);
+        yRotation += lookX;
+
+        camera.transform.rotation = Quaternion.Euler(xRotation, yRotation, 0f);
+
+    }
+
+    public void OnLook(InputAction.CallbackContext context) {
+        lookInput = context.ReadValue<Vector2>();
+        lookX = lookInput.x * lookSensitivity / 100f;
+        lookY = lookInput.y * lookSensitivity / 100f;
+        
+        Debug.Log($"Look {lookX} {lookY}");
+
+        xRotation -= lookY;
+        xRotation = Mathf.Clamp(xRotation, minLookAngle, maxLookAngle);
+        yRotation += lookX;
+
+        camera.transform.rotation = Quaternion.Euler(xRotation, yRotation, 0f);
+
     }
 }
