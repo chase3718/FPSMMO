@@ -520,7 +520,6 @@ GameObject:
   - component: {fileID: 789230145}
   - component: {fileID: 789230149}
   - component: {fileID: 789230148}
-  - component: {fileID: 789230147}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -552,41 +551,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &789230147
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 789230142}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 46ccf7535abfffe4694ceea7b7b84f0b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  AccelerationRate: 20
-  DecelerationsRate: 20
-  AerialAcceleration: 5
-  JumpSpeed: 4
-  nudgeExtra: 0.5
-  MaxSlope: 45
-  curSpeed: 5
-  lookSensitivity: 3
-  maxLookAngle: 85
-  minLookAngle: -90
-  toggleSprint: 0
-  toggleCrouch: 0
-  maxInputSpeed: 9
-  landingSoak: 3
-  jumpCooldownTime: 0.25
-  states: 
-  standHeight: 2
-  crouchHeight: 1
-  terminalVelocity: 20
-  walk: 5
-  sprint: 8
-  crouch: 2.5
-  slide: 5
 --- !u!136 &789230148
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -4227,7 +4191,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh-23570
+  m_Name: pb_Mesh23222
   serializedVersion: 10
   m_SubMeshes:
   - serializedVersion: 2
